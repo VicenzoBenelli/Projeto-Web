@@ -9,6 +9,9 @@ export const idSchema = z.number({
 }).int('Informe um número inteiro').positive('Informe um número positivo')
   .max(2147483647, 'Número acima do limite permitido');
 
+export const idParametroSchema = z.string().regex(/^\d+$/, 'Id inválido')
+  .transform(Number).pipe(idSchema);
+
 export const especies = ['CACHORRO', 'GATO', 'OUTRO'] as const;
 export const statusAgendamentos = ['AGENDADO', 'CONCLUIDO', 'CANCELADO'] as const;
 export const especieSchema = z.enum(especies, {

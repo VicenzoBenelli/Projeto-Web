@@ -116,3 +116,27 @@ middlewares autenticar/validarSchema/tratarErro, config, AppError, cliente Prism
 app/server, testes locais/de integração e executor descartável.
 JWT usa HS256, issuer petshop-api e expiração em 1 hora. O servidor recusa
 JWT_SECRET ausente, curto ou igual ao exemplo. Nenhum segredo padrão foi criado.
+
+## V05 — PASS
+
+Exit 0: `npm run build` (três workspaces), `npm test -w shared` (**24/24**),
+`npm test -w api` (**3/3**), `npm run test:integration -w api` (**21/21**,
+7 de auth/erros + 14 de CRUD), `docker compose up -d --wait` e `git diff --check`.
+Nenhum teste ignorado.
+
+As 10 rotas CRUD foram exercitadas por HTTP com JWT válido e sem JWT (401).
+POST 201, GET/PUT 200, DELETE 204 sem corpo e consultas após remoção 404.
+CPF duplicado em POST/PUT 409; tutor inexistente em Animal 409; exclusão de
+Tutor com Animal e de Animal com Agendamento 409 por FKs reais. Serviço vinculado
+também protegido no PostgreSQL por P2003, usando fixture direta, sem criar rotas
+da onda de Bernardo. GETs de Animal conferem tutor com exatamente id/nome.
+PUT inteiro, limpeza de raca omitida/null, inválidos 400 por campo e ids
+inexistentes 404 em GET/PUT/DELETE também conferidos.
+
+Banco descartável `petshop_test_98ef73883c8740d8ab922df221899d4c`: migration
+versionada aplicada; cleanup e ausência final confirmados.
+
+Arquivos: Tutor/Animal nas quatro camadas de `api/src`, auxiliar obterId,
+montagem no app, schemas de parâmetro numérico no shared (sem regra duplicada),
+fachada de contratos e `api/test/integration/crud.test.mjs`.
+Não foram implementados CRUD de Servico/Agendamento, Swagger /docs ou telas.
