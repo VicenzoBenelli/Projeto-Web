@@ -72,3 +72,23 @@ Escolha explicitada pela ausência do PDF e de valores no pedido: `Especie` =
 Conferir esses valores com o grupo antes de alterá-los; mudanças exigirão
 migration e atualização do shared. O seed redefine apenas os dados públicos de
 demonstração e não deve ser usado como rotina em produção.
+
+## V03 — PASS
+
+Exit 0: `npm run build` (os três workspaces), `npm test -w shared` (**24/24**),
+`npm test -w api` (**2/2**, incluindo resolução do shared),
+`npm test -w frontend` (**1/1**, resolução em runtime Node),
+`docker compose up -d --wait` e `git diff --check`.
+
+Arquivos: `shared/src/index.ts`, `shared/test/schemas.test.mjs`, scripts de teste,
+fachadas `api/src/contracts.ts` e `frontend/src/contracts.ts`, testes de resolução
+dos dois consumidores e este registro. Os tipos são inferidos com `z.infer`.
+O frontend continua somente o shell; não houve validação visual de CRUD.
+
+CPF valida exclusivamente formato de 11 dígitos; telefone 10–11. Campos
+opcionais (raca/descricao/observacoes) aceitam omissão ou null e rejeitam texto
+vazio. PUT inteiro manterá obrigatórios nome/especie/tutorId; a omissão de raca
+limpa o valor no banco. Datas exigem timezone e são normalizadas em UTC.
+Inteiros respeitam o limite do PostgreSQL Int. Senhas têm mínimo de 8 caracteres
+e máximo de 72 bytes para impedir truncamento bcrypt; não são aparadas.
+E-mails são aparados e convertidos para minúsculas. Não há regra duplicada na API.
