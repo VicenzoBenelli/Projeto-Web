@@ -92,3 +92,27 @@ limpa o valor no banco. Datas exigem timezone e são normalizadas em UTC.
 Inteiros respeitam o limite do PostgreSQL Int. Senhas têm mínimo de 8 caracteres
 e máximo de 72 bytes para impedir truncamento bcrypt; não são aparadas.
 E-mails são aparados e convertidos para minúsculas. Não há regra duplicada na API.
+
+## V04 — PASS
+
+Exit 0: `npm run build` (shared/API/frontend), `npm test -w api` (**3/3**),
+`npm run test:integration -w api` (**7/7**), `docker compose up -d --wait`,
+`git diff --check`. Sem skips.
+
+Suíte real por HTTP: cadastro 201, login 200, hash bcrypt no PostgreSQL,
+respostas públicas sem senhaHash, e-mail duplicado 409 (P2002), credenciais
+incorretas 401, Zod 400 por campo, JSON malformado 400 e rota desconhecida 404.
+Middleware verificado com token válido, ausente, inválido, expirado e HS384
+indevido; resposta 500 genérica verificada em harness isolado do middleware.
+Esse harness não adiciona rotas de teste ao backend entregue.
+
+Banco descartável `petshop_test_3a8ae835057d47f99da99db3e0e8f4c4`: ausência
+conferida antes da criação, migration versionada aplicada com migrate deploy,
+conexões encerradas e ausência confirmada após DROP DATABASE. O banco de
+demonstração não foi usado para os testes HTTP de escrita.
+
+Arquivos: auth em `api/src/{routes,controllers,services,repositories}`,
+middlewares autenticar/validarSchema/tratarErro, config, AppError, cliente Prisma,
+app/server, testes locais/de integração e executor descartável.
+JWT usa HS256, issuer petshop-api e expiração em 1 hora. O servidor recusa
+JWT_SECRET ausente, curto ou igual ao exemplo. Nenhum segredo padrão foi criado.

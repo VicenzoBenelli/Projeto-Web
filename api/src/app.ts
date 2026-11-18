@@ -1,8 +1,13 @@
 import express from 'express';
 import cors from 'cors';
+import { authRoutes } from './routes/authRoutes';
+import { tratarErro } from './middlewares/tratarErro';
 
 export const app = express();
+app.disable('x-powered-by');
 app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:5173' }));
-app.use(express.json());
+app.use(express.json({ limit: '100kb' }));
 app.get('/health', (_req, res) => res.status(200).json({ status: 'ok' }));
-// As rotas de autenticação e dos módulos serão adicionadas nas tarefas V04/V05.
+app.use('/auth', authRoutes);
+app.use((_req, res) => { res.status(404).json({ message: 'Rota não encontrada' }); });
+app.use(tratarErro);

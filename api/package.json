@@ -12,7 +12,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:verify-seed": "node prisma/verify-seed.mjs",
     "db:status": "prisma migrate status",
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "test:integration": "node test/run-postgres.mjs"
   },
   "dependencies": {
     "@petshop/shared": "1.0.0", "@prisma/client": "6.19.0",
