@@ -37,15 +37,18 @@ try {
   assert.ok(files.length > 0);
   run(['--test', '--test-concurrency=1', ...files.map(file => `test/integration/${file}`)]);
 } finally {
-  if (created) {
-    const active = await admin.$queryRaw`
-      SELECT pid FROM pg_stat_activity WHERE datname = ${database}
-    `;
-    assert.equal(active.length, 0, 'Conexões pendentes impedem cleanup seguro');
-    await admin.$executeRawUnsafe(`DROP DATABASE "${database}"`);
-    const remaining = await admin.$queryRaw`SELECT datname FROM pg_database WHERE datname = ${database}`;
-    assert.equal(remaining.length, 0);
-    console.info(`Cleanup confirmado: ${database} ausente.`);
+  try {
+    if (created) {
+      const active = await admin.$queryRaw`
+        SELECT pid FROM pg_stat_activity WHERE datname = ${database}
+      `;
+      assert.equal(active.length, 0, 'Conexões pendentes impedem cleanup seguro');
+      await admin.$executeRawUnsafe(`DROP DATABASE "${database}"`);
+      const remaining = await admin.$queryRaw`SELECT datname FROM pg_database WHERE datname = ${database}`;
+      assert.equal(remaining.length, 0);
+      console.info(`Cleanup confirmado: ${database} ausente.`);
+    }
+  } finally {
+    await admin.$disconnect();
   }
-  await admin.$disconnect();
 }

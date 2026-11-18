@@ -4,8 +4,9 @@
   "version": "1.0.0",
   "workspaces": ["shared", "api", "frontend"],
   "scripts": {
-    "postinstall": "npm run build -w shared",
+    "postinstall": "npm run build -w shared && npm run db:generate -w api",
     "build": "npm run build -w shared && npm run build -w api && npm run build -w frontend",
+    "test": "npm test -w shared && npm test -w api && npm test -w frontend && npm run test:integration -w api",
     "dev:api": "npm run dev -w api",
     "dev:frontend": "npm run dev -w frontend"
   },

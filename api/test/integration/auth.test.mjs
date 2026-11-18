@@ -4,7 +4,7 @@ import test, { before, after } from 'node:test';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import express from 'express';
-import { app } from '../../dist/app.js';
+import { startApi } from '../helpers/api-server.mjs';
 import { prisma } from '../../dist/lib/prisma.js';
 import { autenticar } from '../../dist/middlewares/autenticar.js';
 import { tratarErro } from '../../dist/middlewares/tratarErro.js';
@@ -25,12 +25,11 @@ const request = async (path, body) => {
   return { status: response.status, body: JSON.parse(text) };
 };
 before(async () => {
-  server = app.listen(0, '127.0.0.1');
-  await once(server, 'listening');
-  base = `http://127.0.0.1:${server.address().port}`;
+  server = await startApi();
+  base = server.base;
 });
 after(async () => {
-  await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+  if (server) await server.stop();
   await prisma.$disconnect();
 });
 

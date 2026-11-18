@@ -140,3 +140,95 @@ Arquivos: Tutor/Animal nas quatro camadas de `api/src`, auxiliar obterId,
 montagem no app, schemas de parâmetro numérico no shared (sem regra duplicada),
 fachada de contratos e `api/test/integration/crud.test.mjs`.
 Não foram implementados CRUD de Servico/Agendamento, Swagger /docs ou telas.
+
+## V06 — PASS (gate técnico)
+
+Regressão repetida no clone e em **cópia limpa**, sem node_modules, dist ou .env.
+Cópia em `C:/Users/vicen/AppData/Local/Temp/petshop-v06-09260d8fdcd542b6acf2eac499113184`.
+O código/configuração da cópia foi comparado por SHA-256 com a entrega: **50
+arquivos idênticos**. DATABASE_URL de desenvolvimento foi fornecida no ambiente
+do processo; o executor de integração gera um segredo JWT efêmero em memória.
+
+Comandos executados em ambas as árvores com exit **0**:
+
+```text
+npm install
+npm run db:generate -w api
+npm run db:migrate:deploy -w api
+npm run db:verify-seed -w api
+npm run db:status -w api
+npm run build
+npm test
+```
+
+`npm run build` executa os três `npm run build -w shared/api/frontend` em
+sequência. `npm test` executa shared (24), API local (3), resolução no frontend
+(1) e integração PostgreSQL (21): **49/49 em cada árvore**, zero falhas/skips.
+A API compilada (`node dist/server.js`, o mesmo entrypoint de npm start) foi
+iniciada em processo separado para as suítes HTTP, com /health 200, cadastro/login
+e as dez operações CRUD autenticadas. Processos de API encerrados após os testes;
+logs verificados sem segredo JWT nem senha de teste.
+
+Instalação limpa: 293 pacotes, log final `CLEAN_INSTALL_GATE_PASS`.
+SHA-256 do package-lock permaneceu:
+`0F9DA05D3EBB4764277884AC7A4BA181509517D173FD1116E667E6A21EFEA0A6`.
+Seed duplo novamente estável: 1 linha por modelo; bcrypt/FKs/data conferidos.
+Migrate status: `Database schema is up to date!`. Migração inicial também
+reaplicada do zero em cada banco descartável de integração.
+
+Cleanup confirmado dos bancos V06:
+`petshop_test_d135523c146d4b098362ac590104e785` (clone) e
+`petshop_test_54ff0961b492463ea9a1886561d16a94` (instalação limpa).
+
+`docker compose up -d --wait` e `git diff --check`: exit 0. Docker permanece
+saudável. Lockfile e ambos os arquivos de migrations rastreados; .env,
+node_modules e dist não rastreados e ignorados. Branch main e autoria real de
+Vicenzo conferidas. A confirmação remota e o SHA do próprio commit V06 são
+apresentados na entrega da sessão, após commit e push normais.
+
+Arquivos V06: package.json da raiz (postinstall agora gera Prisma Client e teste
+agregado), helper que inicia o servidor compilado, suítes HTTP usando esse
+processo, cleanup do executor em finally e este registro de transferência.
+
+## Commits e transferência
+
+| Task | Status técnico | Commit |
+|---|---|---|
+| V01 | PASS | [c16c9bc](https://github.com/VicenzoBenelli/Projeto-Web/commit/c16c9bcacef8af3d244f8ec153f99221560fb569) |
+| V02 | PASS | [953a408](https://github.com/VicenzoBenelli/Projeto-Web/commit/953a4085561d5ef18153f185966568c4e037eca0) |
+| V03 | PASS | [f31ee6b](https://github.com/VicenzoBenelli/Projeto-Web/commit/f31ee6b55524206353fe685239498fc68ba093b7) |
+| V04 | PASS | [8370a3d](https://github.com/VicenzoBenelli/Projeto-Web/commit/8370a3d0a594df9a5d36bd28f22973f1f0513c6f) |
+| V05 | PASS | [8cc1ef6](https://github.com/VicenzoBenelli/Projeto-Web/commit/8cc1ef69c9edb138d92880ce55a5bfe53be5f8df) |
+| V06 | PASS | Commit que contém esta seção; SHA na entrega e em `git log -1` |
+
+Bernardo deve assumir somente após a confirmação de publicação de V06, mantendo
+um único escritor e repetindo `git status` / `git pull --ff-only origin main`.
+Esta execução não iniciou B01 nem tarefas de Gabriel/Marcos.
+
+Para reproduzir: ativar Node 22, criar .env a partir dos dois exemplos e gerar
+um JWT_SECRET aleatório (mínimo 32 caracteres; não registrar seu valor).
+Executar `npm install`, `docker compose up -d --wait`, `npm run db:migrate:deploy
+-w api`, `npm run db:verify-seed -w api`, `npm run build`, `npm test` e iniciar
+`npm run dev:api` (ou `npm start -w api` após build). A suíte de integração exige
+DATABASE_URL em 127.0.0.1 e permissão local de criar/remover bancos, fornecida
+pelo usuário de desenvolvimento do Compose. Ela não grava no banco apontado:
+cria banco petshop_test com UUID e remove apenas o que criou.
+
+No Windows desta execução, Node 22 está fora do PATH global; ativação na sessão:
+
+```powershell
+$nodeDir = (Get-Content "$env:LOCALAPPDATA/petshop-toolchain/node22-path.txt").Trim()
+$env:PATH = "$nodeDir;$env:PATH"
+```
+
+Preservar as quatro camadas, validarBody e os schemas existentes ao implementar
+as tarefas de Bernardo previstas no plano. O banco usa porta 55432 no host,
+credenciais públicas locais dos exemplos e volume persistente; API usa 3001.
+O login de demonstração é professor@petshop.com / PetShop@2026!, com hash bcrypt.
+
+Riscos pendentes: PDF ausente e enums escolhidos conforme registrado em V02;
+**12 alertas npm audit** (3 moderados/9 altos) permanecem, sem correção forçada
+que altere as majors exigidas. Isto exige revisão de dependências antes de uso
+fora da demonstração local. Aviso de depreciação de package.json#prisma refere-se
+ao Prisma 7; a stack permanece 6.19.0. README definitivo e vídeo seguem para a
+integração das quatro ondas. Nenhum deploy foi realizado.

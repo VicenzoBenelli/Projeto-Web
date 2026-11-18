@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
-import { once } from 'node:events';
 import test, { before, after } from 'node:test';
-import { app } from '../../dist/app.js';
+import { startApi } from '../helpers/api-server.mjs';
 import { prisma } from '../../dist/lib/prisma.js';
 
 assert.equal(new URL(process.env.DATABASE_URL).pathname, `/${process.env.PETSHOP_TEST_DATABASE}`);
@@ -28,9 +27,8 @@ const call = async (method, path, body, authenticated = true) => {
   return { status: response.status, body: text ? JSON.parse(text) : null, text };
 };
 before(async () => {
-  server = app.listen(0, '127.0.0.1');
-  await once(server, 'listening');
-  base = `http://127.0.0.1:${server.address().port}`;
+  server = await startApi();
+  base = server.base;
   const usuario = { nome: 'CRUD', email: 'crud@example.com', senha: 'Senha@123' };
   assert.equal((await call('POST', '/auth/cadastro', usuario, false)).status, 201);
   const login = await call('POST', '/auth/login', usuario, false);
@@ -38,7 +36,7 @@ before(async () => {
   token = login.body.token;
 });
 after(async () => {
-  await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+  if (server) await server.stop();
   await prisma.$disconnect();
 });
 
