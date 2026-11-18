@@ -45,3 +45,30 @@ Verificação adicional: `npm audit --json` retornou exit **1**, com **12** aler
 Zod 3. Não foi executado `audit fix --force`: as correções sugeridas para Prisma
 e Zod mudam as majors exigidas. Este audit não é um gate aprovado de segurança;
 o risco precisa ser revisto antes de uso fora da demonstração local.
+
+## V02 — PASS
+
+Comandos com exit 0: `npm exec -w api -- prisma format`, `prisma validate`,
+`npm run db:migrate:dev -w api -- --name init`, `npm run db:generate -w api`,
+`npm run db:verify-seed -w api`, `npm run db:status -w api`, `npm run build` e
+`docker compose up -d --wait`.
+
+Migration real criada/aplicada: `api/prisma/migrations/20261118161526_init/migration.sql`;
+`migration_lock.toml` também versionado. Log: `Your database is now in sync with
+your schema` / `Database schema is up to date!`.
+
+Seed executado **duas vezes** pelo verificador: contagens estáveis
+`{"usuario":1,"tutor":1,"animal":1,"servico":1,"agendamento":1}`.
+Verificadas senha bcrypt por compare, relações encadeadas, data UTC e as três
+FKs RESTRICT no catálogo PostgreSQL. Nenhum `db push` foi usado.
+
+Arquivos: `api/prisma/{schema.prisma,seed.ts,verify-seed.mjs,migrations/}`,
+scripts em `api/package.json` e este registro. Esquema contém exatamente cinco
+modelos e dois enums; cpf/email/Servico.nome únicos; preço inteiro em centavos;
+datas TIMESTAMPTZ(3).
+
+Escolha explicitada pela ausência do PDF e de valores no pedido: `Especie` =
+`CACHORRO/GATO/OUTRO`; `StatusAgendamento` = `AGENDADO/CONCLUIDO/CANCELADO`.
+Conferir esses valores com o grupo antes de alterá-los; mudanças exigirão
+migration e atualização do shared. O seed redefine apenas os dados públicos de
+demonstração e não deve ser usado como rotina em produção.

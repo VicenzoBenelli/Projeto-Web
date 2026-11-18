@@ -10,6 +10,8 @@
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
+    "db:verify-seed": "node prisma/verify-seed.mjs",
+    "db:status": "prisma migrate status",
     "test": "node --test test/*.test.mjs"
   },
   "dependencies": {

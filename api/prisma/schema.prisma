@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Especie {
+  CACHORRO
+  GATO
+  OUTRO
+}
+
+enum StatusAgendamento {
+  AGENDADO
+  CONCLUIDO
+  CANCELADO
+}
+
+model Tutor {
+  id       Int      @id @default(autoincrement())
+  nome     String
+  cpf      String   @unique
+  telefone String
+  criadoEm DateTime @default(now()) @db.Timestamptz(3)
+  animais  Animal[]
+}
+
+model Animal {
+  id           Int           @id @default(autoincrement())
+  nome         String
+  especie      Especie
+  raca         String?
+  tutorId      Int
+  tutor        Tutor         @relation(fields: [tutorId], references: [id], onDelete: Restrict)
+  agendamentos Agendamento[]
+}
+
+model Servico {
+  id             Int           @id @default(autoincrement())
+  nome           String        @unique
+  descricao      String?
+  precoCentavos  Int
+  duracaoMinutos Int
+  agendamentos   Agendamento[]
+}
+
+model Agendamento {
+  id          Int               @id @default(autoincrement())
+  animalId    Int
+  servicoId   Int
+  dataHora    DateTime          @db.Timestamptz(3)
+  status      StatusAgendamento @default(AGENDADO)
+  observacoes String?
+  animal      Animal            @relation(fields: [animalId], references: [id], onDelete: Restrict)
+  servico     Servico           @relation(fields: [servicoId], references: [id], onDelete: Restrict)
+}
+
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  email     String   @unique
+  senhaHash String
+  criadoEm  DateTime @default(now()) @db.Timestamptz(3)
+}
