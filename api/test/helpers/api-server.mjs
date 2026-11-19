@@ -24,6 +24,10 @@ export async function startApi() {
     assert.equal(logs.join('').includes(process.env.JWT_SECRET), false, 'Segredo JWT apareceu nos logs');
     assert.equal(logs.join('').includes('Senha@123'), false, 'Senha apareceu nos logs');
   };
+  const assertLogsDoNotContain = (secret, label = 'Segredo') => {
+    assert.ok(secret, `${label} de teste deve estar definido`);
+    assert.equal(logs.join('').includes(secret), false, `${label} apareceu nos logs`);
+  };
   const base = `http://127.0.0.1:${port}`;
   try {
     const deadline = Date.now() + 15000;
@@ -34,7 +38,7 @@ export async function startApi() {
         if (response.status === 200) {
           assert.deepEqual(await response.json(), { status: 'ok' });
           console.info('API compilada iniciada em processo próprio; /health 200.');
-          return { base, stop };
+          return { base, stop, assertLogsDoNotContain };
         }
       } catch { /* Aguarda o socket do processo real ficar disponível. */ }
       await setTimeout(100);

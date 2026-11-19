@@ -13,6 +13,7 @@ assert.equal(new URL(process.env.DATABASE_URL).pathname, `/${process.env.PETSHOP
 assert.match(process.env.PETSHOP_TEST_DATABASE, /^petshop_test_[a-f0-9]{32}$/);
 let server;
 let base;
+let loginToken;
 const input = { nome: 'Teste Auth', email: 'auth@example.com', senha: 'Senha@123' };
 const request = async (path, body) => {
   const response = await fetch(base + path, {
@@ -29,7 +30,10 @@ before(async () => {
   base = server.base;
 });
 after(async () => {
-  if (server) await server.stop();
+  if (server) {
+    await server.stop();
+    if (loginToken) server.assertLogsDoNotContain(loginToken, 'JWT de acesso');
+  }
   await prisma.$disconnect();
 });
 
@@ -44,6 +48,7 @@ test('cadastro 201 retorna só id/nome/email e persiste bcrypt', async () => {
 test('login 200 retorna contrato e JWT HS256 com validade de uma hora', async () => {
   const result = await request('/auth/login', { ...input, email: 'AUTH@example.com' });
   assert.equal(result.status, 200);
+  loginToken = result.body.token;
   assert.deepEqual(Object.keys(result.body).sort(), ['token', 'usuario']);
   assert.deepEqual(Object.keys(result.body.usuario).sort(), ['email', 'id', 'nome']);
   const decoded = jwt.verify(result.body.token, process.env.JWT_SECRET, { algorithms: ['HS256'], issuer: 'petshop-api' });
