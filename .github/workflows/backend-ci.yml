@@ -1,0 +1,112 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Builds e testes com PostgreSQL 16
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: petshop_ci
+          POSTGRES_DB: petshop_ci
+          # Somente no runner descartável, sem senha ou dados de desenvolvimento.
+          # O serviço fica restrito ao loopback e não usa volume persistente.
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 127.0.0.1:55432:5432
+        options: >-
+          --health-cmd "pg_isready -h 127.0.0.1 -U petshop_ci -d petshop_ci"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://petshop_ci@127.0.0.1:55432/petshop_ci?schema=public
+      CORS_ORIGIN: http://localhost:5173
+    steps:
+      - name: Obter código
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          clean: false
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Gerar JWT_SECRET efêmero e mascarado
+        shell: bash
+        run: |
+          node <<'NODE'
+          const { randomBytes } = require('node:crypto');
+          const { appendFileSync } = require('node:fs');
+          const secret = randomBytes(48).toString('hex');
+          console.log('::add-mask::' + secret);
+          appendFileSync(process.env.GITHUB_ENV, 'JWT_SECRET=' + secret + '\n');
+          NODE
+      - name: Instalar pelo lockfile
+        run: npm ci
+      - name: Compilar shared
+        run: npm run build -w shared
+      - name: Compilar API
+        run: npm run build -w api
+      - name: Compilar frontend
+        run: npm run build -w frontend
+      - name: Validar schema Prisma
+        run: npm exec -w api -- prisma validate
+      - name: Aplicar migrations no banco efêmero do job
+        run: npm run db:migrate:deploy -w api
+      - name: Verificar seed idempotente
+        run: npm run db:verify-seed -w api
+      - name: Executar suíte completa e integrações em bancos descartáveis
+        run: npm test
+
+  audit:
+    name: Auditoria informativa de dependências
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Obter código
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          clean: false
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Instalar sem executar scripts para auditoria
+        run: npm ci --ignore-scripts
+      - name: npm audit completo (informativo)
+        id: audit_full
+        continue-on-error: true
+        run: npm audit --json
+      - name: npm audit sem dev (informativo)
+        id: audit_production
+        continue-on-error: true
+        run: npm audit --omit=dev --json
+      - name: Registrar resultados sem declarar aprovação de segurança
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Auditoria informativa — não é aprovação de segurança'
+            echo 'npm audit completo: ${{ steps.audit_full.outcome }}'
+            echo 'npm audit sem dev: ${{ steps.audit_production.outcome }}'
+            echo 'Consulte o JSON dos passos e docs/GATE-SEGURANCA-CI.md para os riscos residuais.'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [[ '${{ steps.audit_full.outcome }}' != 'success' || '${{ steps.audit_production.outcome }}' != 'success' ]]; then
+            echo '::warning::Auditoria com ressalvas ou indisponível. Consulte os resultados; testes verdes não significam ausência de vulnerabilidades.'
+          fi
