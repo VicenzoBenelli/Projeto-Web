@@ -118,11 +118,21 @@ Validação local do YAML: **actionlint 1.7.12, exit 0**; binário oficial tempo
 com SHA-256 conferido pelo arquivo de checksums da release. Referência de serviço:
 [documentação GitHub](https://docs.github.com/en/actions/tutorials/use-containerized-services/create-postgresql-service-containers).
 
-Actions habilitado no repositório e CLI autenticada para leitura dos runs.
-**Execução remota ainda não existe na redação pré-publicação deste arquivo.**
-Lint não é execução de CI. Após o push, o SHA, URL do run e conclusão real serão
-registrados na entrega da sessão. Se a consulta falhar, o estado deve ser
-**CI PENDENTE DE VERIFICAÇÃO**, nunca PASS inferido do YAML.
+**Execução remota confirmada: PASS.** Workflow Backend CI, evento push,
+commit de implementação `2a76c4a586932ebf1960d0955464e3a0740bb549`,
+[run 44832884223](https://github.com/VicenzoBenelli/Projeto-Web/actions/runs/44832884223),
+concluído com success. Consultados metadados, passos e logs reais pela CLI.
+Instalação, três builds, schema, migration, seed duplo e suíte completa passaram:
+**66/66**, zero falhas/skips. Cleanup confirmado do banco
+`petshop_test_ffae72bf87234d70a393e316166a8f41`.
+
+O job informativo concluiu, mas os dois comandos npm audit retornaram **exit 1**,
+ambos com cinco altos. O summary registrou outcome failure e aviso de ressalvas.
+Portanto, CI funcional aprovada não significa aprovação de segurança.
+Metadados e logs preservados junto às evidências locais em
+`github-run-44832884223.json` e `github-run-44832884223.log`.
+Este registro posterior ao push altera somente documentação; a execução do
+SHA documental final será confirmada na entrega da sessão.
 [Página do workflow](https://github.com/VicenzoBenelli/Projeto-Web/actions/workflows/backend-ci.yml).
 
 ## D — Regressão executada nesta sessão
@@ -187,16 +197,20 @@ Artefatos de instrumentação não integram o commit.
 ## E/F — Entrega e parecer
 
 Allowlist de quatro arquivos: api/package.json, package-lock.json,
-.github/workflows/backend-ci.yml e este relatório. Identidade real de Vicenzo,
-diff completo e git diff --check serão conferidos antes de commit/push normais.
+.github/workflows/backend-ci.yml e este relatório. Commit de implementação
+`2a76c4a586932ebf1960d0955464e3a0740bb549`, pai igual ao SHA inicial, publicado
+por push normal com autoria real de Vicenzo e SHA remoto confirmado. Diff
+integral e git diff --check aprovados; worktree limpo e sincronizado após push.
+O resultado remoto foi acrescentado neste fechamento documental, também sujeito
+à revisão e publicação normal, sem reescrever o commit já publicado.
 AGENTS.md, ambientes, tokens, node_modules, dist e temporários ficam fora do Git.
 Histórico anterior preservado; SHA final e paridade remota na entrega da sessão.
 
 **APROVADO COM RESSALVAS para integração acadêmica de Gabriel**, com regressão
 local aprovada e um advisory corrigido por patch oficial. Persistem três
 advisories distintos em cinco pacotes sinalizados, PDF indisponível e aviso
-futuro package.json#prisma relativo ao Prisma 7. A conclusão da CI remota será
-verificada após publicação, separadamente da aprovação local e da auditoria.
+futuro package.json#prisma relativo ao Prisma 7. CI remota da implementação
+confirmada com success, separadamente das ressalvas da auditoria.
 Não é certificação de produção ou garantia de ausência de defeitos não testados.
 Nenhum README definitivo, tela, deploy ou início automático da Onda 03.
 A liberação de Gabriel continua pertencendo ao operador.
