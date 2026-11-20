@@ -248,6 +248,20 @@ test('POST e PUT /agendamentos rejeitam animalId e servicoId inexistentes com 40
   }
   assert.equal((await call('GET', `/agendamentos/${agendamento.id}`)).body.status, 'CANCELADO');
 });
+
+test('fusos inválidos retornam 400 por campo em POST/PUT e preservam o agendamento', async () => {
+  for (const offset of ['+24:00', '+99:99', '+03:99', '-24:00', '-03:60']) {
+    for (const method of ['POST', 'PUT']) {
+      const result = await call(method,
+        method === 'POST' ? '/agendamentos' : `/agendamentos/${agendamento.id}`,
+        agendamentoInput({ dataHora: `2026-12-01T10:00:00${offset}` }));
+      assert.equal(result.status, 400);
+      assert.equal(result.body.message, 'Dados inválidos');
+      assert.ok(result.body.errors.some(error => error.field === 'dataHora'));
+    }
+  }
+  assert.deepEqual((await call('GET', `/agendamentos/${agendamento.id}`)).body, agendamento);
+});
 test('POST e PUT usam schemas compartilhados e retornam errors por campo', async () => {
   for (const [path, id, body, field] of [
     ['/tutores', tutor.id, { ...tutorInput, cpf: '123' }, 'cpf'],

@@ -52,6 +52,8 @@ export const agendamentoSchema = z.object({
   servicoId: idSchema,
   dataHora: textoObrigatorio().datetime({
     offset: true, message: 'Informe data e hora ISO 8601 com fuso horário',
+  }).refine(value => Number.isFinite(Date.parse(value)), {
+    message: 'Informe data e hora ISO 8601 com fuso horário',
   }).transform(value => new Date(value).toISOString()),
   status: statusAgendamentoSchema.default('AGENDADO'),
   observacoes: textoOpcional(),

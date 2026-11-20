@@ -63,7 +63,10 @@ test('schemas document entradas, erros e a resposta aninhada do agendamento', as
   assert.deepEqual(schemas.AgendamentoInput.properties.status.enum, ['AGENDADO', 'CONCLUIDO', 'CANCELADO']);
   assert.equal(schemas.AgendamentoResponse.properties.animal.properties.tutor.properties.nome.type, 'string');
   assert.equal(schemas.AgendamentoResponse.properties.servico.properties.nome.type, 'string');
-  assert.deepEqual(schemas.BadRequest.oneOf[1].required, ['message', 'errors']);
+  // O objeto Zod também satisfaz ApiError: oneOf rejeitaria uma resposta real.
+  assert.equal('oneOf' in schemas.BadRequest, false);
+  assert.deepEqual(schemas.BadRequest.anyOf[0], { $ref: '#/components/schemas/ApiError' });
+  assert.deepEqual(schemas.BadRequest.anyOf[1].required, ['message', 'errors']);
 
   const allResponses = JSON.stringify(document.paths);
   for (const status of ['200', '201', '204', '400', '401', '404', '409']) {

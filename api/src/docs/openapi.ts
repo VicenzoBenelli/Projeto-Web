@@ -212,7 +212,7 @@ export const openApiDocument = {
         properties: { message: { type: 'string', example: 'Registro não encontrado' } },
       },
       BadRequest: {
-        oneOf: [
+        anyOf: [
           ref('ApiError'),
           {
             type: 'object',
@@ -252,7 +252,7 @@ export const openApiDocument = {
         properties: {
           nome: { type: 'string', minLength: 1, pattern: '\\S', example: 'Rex' },
           especie: { type: 'string', enum: ['CACHORRO', 'GATO', 'OUTRO'] },
-          raca: { type: 'string', nullable: true, minLength: 1, description: 'Opcional; pode ser null.' },
+          raca: { type: 'string', nullable: true, minLength: 1, pattern: '\\S', description: 'Opcional; pode ser null. Texto é aparado; vazio é rejeitado. Omissão no PUT limpa o campo.' },
           tutorId: ref('Id'),
         },
       },
@@ -271,9 +271,9 @@ export const openApiDocument = {
         type: 'object', required: ['nome', 'precoCentavos', 'duracaoMinutos'],
         properties: {
           nome: { type: 'string', minLength: 1, pattern: '\\S', example: 'Banho' },
-          descricao: { type: 'string', nullable: true, minLength: 1, description: 'Opcional; pode ser null.' },
-          precoCentavos: { ...ref('Id'), description: 'Inteiro positivo em centavos; não use ponto flutuante.' },
-          duracaoMinutos: { ...ref('Id'), description: 'Inteiro positivo.' },
+          descricao: { type: 'string', nullable: true, minLength: 1, pattern: '\\S', description: 'Opcional; pode ser null. Texto é aparado; vazio é rejeitado. Omissão no PUT limpa o campo.' },
+          precoCentavos: { allOf: [ref('Id')], description: 'Inteiro positivo em centavos; não use ponto flutuante.' },
+          duracaoMinutos: { allOf: [ref('Id')], description: 'Inteiro positivo.' },
         },
       },
       ServicoResponse: {
@@ -297,7 +297,7 @@ export const openApiDocument = {
             type: 'string', enum: ['AGENDADO', 'CONCLUIDO', 'CANCELADO'],
             default: 'AGENDADO', description: 'Opcional; assume AGENDADO quando omitido.',
           },
-          observacoes: { type: 'string', nullable: true, minLength: 1, description: 'Opcional; pode ser null.' },
+          observacoes: { type: 'string', nullable: true, minLength: 1, pattern: '\\S', description: 'Opcional; pode ser null. Texto é aparado; vazio é rejeitado. Omissão no PUT limpa o campo.' },
         },
       },
       AgendamentoResponse: {
@@ -329,8 +329,8 @@ export const openApiDocument = {
       LoginInput: {
         type: 'object', required: ['email', 'senha'],
         properties: {
-          email: { type: 'string', format: 'email', example: 'maria@example.com' },
-          senha: { type: 'string', format: 'password', minLength: 8 },
+          email: { type: 'string', format: 'email', example: 'maria@example.com', description: 'Aparado e normalizado para minúsculas.' },
+          senha: { type: 'string', format: 'password', minLength: 8, description: 'Mínimo de 8 caracteres e máximo de 72 bytes para bcrypt; não é aparada.' },
         },
       },
       UsuarioPublico: {

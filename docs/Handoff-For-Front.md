@@ -8,17 +8,66 @@
 
 ## Inicialização local
 
-Na raiz do repositório, com Docker Desktop ativo:
+Pré-requisitos: Node **22.x**, npm compatível (gate: 10.9.9), Docker Desktop
+com engine Linux e Docker Compose operacionais. O Node 24 global não atende ao
+`engines` do projeto. No Windows desta máquina, ative o Node 22 apenas na sessão:
+
+```powershell
+$nodeDir = (Get-Content "$env:LOCALAPPDATA/petshop-toolchain/node22-path.txt").Trim()
+$env:PATH = "$nodeDir;$env:PATH"
+node --version
+npm --version
+```
+
+Em outra máquina, instale/ative Node 22 pelo gerenciador de versões de sua
+preferência; o caminho acima é específico desta máquina.
+
+Na raiz do repositório, configure os dois arquivos de ambiente **antes** de
+executar a API. Em PowerShell, os comandos abaixo preservam arquivos existentes:
+
+```powershell
+if (!(Test-Path .env)) { Copy-Item .env.example .env }
+if (!(Test-Path api/.env)) {
+  Copy-Item api/.env.example api/.env
+  node -e 'const fs=require("node:fs"),crypto=require("node:crypto"); const p="api/.env"; fs.writeFileSync(p,fs.readFileSync(p,"utf8").replace("substitua-por-segredo-longo-aleatorio-no-ambiente-local",crypto.randomBytes(48).toString("hex")));'
+}
+```
+
+Se `api/.env` já existir, confira localmente se `JWT_SECRET` é aleatório, tem
+pelo menos 32 caracteres e difere do exemplo. Não imprima nem compartilhe esse
+segredo. `.env` e `api/.env` são ignorados pelo Git. Os exemplos usam somente
+credenciais públicas de desenvolvimento, sem segredos de produção.
+
+Com Docker Desktop ativo, na raiz:
 
 ```bash
-docker compose up -d postgres
 npm ci
+docker compose up -d --wait postgres
 npm run db:migrate:deploy -w api
+npm run db:status -w api
 npm run db:seed -w api
+npm run db:verify-seed -w api
+npm run build -w shared
+npm run build -w api
+npm run build -w frontend
+npm test
 npm run dev:api
 ```
 
-O serviço PostgreSQL do Compose fica limitado ao loopback e publica a porta `55432`. A API usa a configuração local de `api/.env` e inicia na porta `3001`. O frontend deve enviar `Authorization: Bearer <JWT>` nas operações privadas. O Swagger e `/health` são públicos.
+`npm ci` compila shared e gera o Prisma Client pelo postinstall. O serviço
+PostgreSQL do Compose fica limitado ao loopback e publica a porta `55432`.
+`api/.env` aponta para `postgresql://petshop:petshop_dev@127.0.0.1:55432/petshop?schema=public`,
+com `PORT=3001` e `CORS_ORIGIN=http://localhost:5173`. Se mudar as credenciais ou
+porta no `.env` da raiz, ajuste também `DATABASE_URL` em `api/.env`.
+O seed é acadêmico: redefine os dados públicos de demonstração; não é rotina de
+produção. O verificador executa o seed mais duas vezes e confere idempotência.
+`npm test` cria/remove seu próprio banco descartável e exige permissão local
+CREATEDB do usuário do Compose; não escreve no banco de desenvolvimento.
+
+A API usa `api/.env` e inicia na porta `3001`. Após o build, pode ser executada
+por `npm start -w api`. Em outro terminal, `npm run dev:frontend` inicia o shell
+Vite em `http://localhost:5173`. Se a porta estiver ocupada, libere-a ou ajuste o
+CORS para a origem efetivamente usada. O Swagger e `/health` são públicos.
 
 ## Conta acadêmica de demonstração
 
@@ -29,7 +78,29 @@ E-mail: professor@petshop.com
 Senha: PetShop@2026!
 ```
 
-Obtenha o JWT atual executando `POST /auth/login`, exemplo abaixo. O token tem validade de uma hora. O token individual do handoff deve ser compartilhado em canal privado e não armazenado neste arquivo ou no Git.
+Gabriel deve gerar seu próprio JWT por `POST /auth/login`, com JSON contendo
+`email` e `senha` acima. O token tem validade de uma hora; repita o login quando
+expirar. Não é necessário compartilhar tokens individuais. Em `/docs`, abra
+Authorize e cole apenas o token retornado, sem o prefixo Bearer.
+
+## Consumo com Axios
+
+Axios já é dependência do frontend. Configure `baseURL: 'http://localhost:3001'`
+e envie `Authorization: Bearer <JWT>` nas 20 operações CRUD. Cadastro/login são
+públicos. O corpo nominal está em `response.data`; falhas HTTP estão em
+`error.response.status` e `error.response.data`. A resposta 204 tem corpo vazio.
+Em erros Zod, associe cada item de `errors` ao campo indicado por `field`.
+Conflitos 409 têm `message` pública; não dependa do texto exato para decidir o
+status. Não coloque token em URL nem em código versionado.
+
+Os selects usam `GET /tutores` (`id`, `nome`), `GET /animais` (`id`, `nome`,
+`tutor.id`, `tutor.nome`) e `GET /servicos` (`id`, `nome`). As listas são arrays
+reais, sem wrapper ou paginação. Preços são inteiros positivos em centavos.
+POST/PUT retornam o objeto completo, incluindo relações documentadas abaixo.
+PUT exige os campos obrigatórios completos; omitir raca/descricao/observacoes
+limpa esses opcionais. Status omitido em Agendamento assume AGENDADO.
+Datas devem incluir fuso (`Z` ou `±HH:MM`) e retornam UTC. Converta o valor de
+`datetime-local` para ISO com fuso antes do envio. Fusos inválidos retornam 400.
 
 ## Matriz dos 22 endpoints
 
@@ -89,6 +160,10 @@ Para POST/PUT inválidos, a API retorna `400` com `{ "message": "Dados inválido
 
 ## Limitações
 
-- JWT é temporário (uma hora); Gabriel deve solicitar outro via login quando necessário. O token atual foi entregue separadamente do repositório para evitar versionar credencial bearer.
+- JWT é temporário (uma hora); Gabriel deve gerar outro via login quando necessário.
 - Prisma 6.19 emitiu aviso de descontinuação futura da configuração `package.json#prisma`; não afeta esta entrega.
 - A API local já estava ativa em `localhost:3001`; o smoke de banco recém-criado foi executado em instância isolada na porta `3002` para não interromper o servidor em uso.
+
+As evidências B05 acima são históricas. A homologação atual, correções e riscos
+de dependências estão em [GATE-BACKEND-FINAL.md](GATE-BACKEND-FINAL.md).
+Este handoff não autoriza iniciar automaticamente a Onda 03.

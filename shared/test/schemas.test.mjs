@@ -80,3 +80,15 @@ test('auth normaliza e-mail, preserva senha e evita truncamento bcrypt', () => {
   assert.equal(cadastroSchema.safeParse({ ...cadastro, email: 'invalido' }).success, false);
   assert.equal('senhaHash' in cadastroSchema.parse({ ...cadastro, senhaHash: 'ignorar' }), false);
 });
+
+test('datetime rejeita fusos inválidos sem lançar exceção e aceita limites válidos', () => {
+  for (const offset of ['+24:00', '+99:99', '+03:99', '-24:00', '-03:60']) {
+    const result = agendamentoSchema.safeParse({ ...agendamento, dataHora: `2026-12-01T10:00:00${offset}` });
+    assert.equal(result.success, false);
+    assert.equal(result.error.issues[0].path[0], 'dataHora');
+  }
+  for (const offset of ['Z', '+00:00', '-03:00', '+05:30', '+23:59', '-23:59']) {
+    const dataHora = `2026-12-01T10:00:00${offset}`;
+    assert.equal(agendamentoSchema.parse({ ...agendamento, dataHora }).dataHora, new Date(dataHora).toISOString());
+  }
+});
