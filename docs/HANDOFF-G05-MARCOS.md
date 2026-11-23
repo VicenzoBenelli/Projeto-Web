@@ -244,11 +244,12 @@ fora do repositório e a saída informa o caminho para inspeção.
 - Inspeção cobre Chrome headless e duas larguras, não todos os navegadores ou
   dispositivos físicos. Sem falha funcional conhecida nos fluxos exercitados.
 
-Parecer local: **APROVADO COM RESSALVAS** para Marcos. A integração exige manter
-o commit autoral de Gabriel, correções com identidade real de Vicenzo,
-fast-forward na main, push normal e CI real do SHA final com sucesso. SHA,
-commits e resultado remoto serão apresentados na entrega final da sessão,
-após a publicação. A Onda 04 não foi iniciada; a liberação pertence ao operador.
+Parecer técnico: **APROVADO COM RESSALVAS** para Marcos. O commit autoral de
+Gabriel foi preservado; as correções têm identidade real de Vicenzo e foram
+integradas por fast-forward na main, com push normal. A execução remota das
+alterações de código passou, conforme registro abaixo. O SHA final, incluindo
+este registro documental, e sua CI serão confirmados na entrega da sessão.
+A Onda 04 não foi iniciada; a liberação pertence ao operador.
 
 ### Verificação remota e ajuste de sincronização
 
@@ -265,11 +266,22 @@ após sair do cadastro, antes de preencher os campos, e a exigir a resposta 401
 real. Foram mantidas as verificações do alerta, sessão e todos os demais fluxos.
 Falhas futuras registram diagnóstico com caminhos, status e comprimentos dos
 campos, sem seus valores, corpos ou headers. Não houve alteração do produto,
-backend ou contrato para acomodar esse ajuste. A conclusão da nova execução
-remota, referente ao SHA posterior, deve ser conferida no relatório final.
+backend ou contrato para acomodar esse ajuste.
 
 Repetição local após esse ajuste: **74/74** e **2 passed (2.0m)**, sem skips
 ou erros inesperados. Logs tests-ci-sync.log e e2e-ci-sync.log na mesma pasta
 do gate; artefatos em `%TEMP%/petshop-ui-4gAEFu`. Bancos
 `petshop_test_579540ab94824e08802f15dbce074b30` e
 `petshop_e2e_85ecbac05b5644749fabc9ccd6cb7682` removidos pelos próprios runners.
+
+A nova execução
+[45276838329](https://github.com/VicenzoBenelli/Projeto-Web/actions/runs/45276838329),
+do commit de código `8b342f9a73123a56a2a403d6283faed32e569a50`, concluiu com
+**success** em 23/11/2026 às 22:10:57 UTC. Logs remotos conferidos: três builds,
+Prisma, migrations, seed duplo, **74/74** sem skips e **2 passed (38.2s)** nas
+jornadas Chromium Linux, notebook/mobile. Cleanup confirmado dos bancos
+`petshop_test_572d5fe5115c460a8ebaddb36aabc830` e
+`petshop_e2e_217306331f7b47aab9d8c67aa4b51739`. A auditoria completa e sem dev
+continuou com **5 altos e exit 1**, explicitamente informativa; CI verde não
+elimina essas ressalvas. Logs e metadados salvos localmente em ci-success.log
+e ci-final-status.json na pasta do gate.
