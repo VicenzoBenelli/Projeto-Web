@@ -1,11 +1,11 @@
 
 import { Navigate, Outlet } from 'react-router-dom';
-import { TOKEN_KEY } from '../services/api';
+import { useAuth } from '../auth/AuthContext';
 
 export default function ProtectedRoute() {
-  const token = sessionStorage.getItem(TOKEN_KEY);
+  const { session } = useAuth();
 
-  if (!token) {
+  if (!session) {
     return <Navigate to="/login" replace />;
   }
 

@@ -1,9 +1,10 @@
 
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 import {
   Alert,
+  Anchor,
   Button,
   Paper,
   PasswordInput,
@@ -17,20 +18,13 @@ import {
 import { PawPrint, LogIn } from 'lucide-react';
 
 import { loginSchema } from '../contracts';
-import { api, TOKEN_KEY } from '../services/api';
-import { mensagemErro } from '../utils/apiError';
-
-type LoginResponse = {
-  token: string;
-  usuario: {
-    id: number;
-    nome: string;
-    email: string;
-  };
-};
+import { useAuth } from '../auth/AuthContext';
+import { errosApi, mensagemErro } from '../utils/apiError';
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { session, login } = useAuth();
 
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
@@ -65,26 +59,19 @@ export default function Login() {
     try {
       setCarregando(true);
 
-      const resposta = await api.post<LoginResponse>(
-        '/auth/login',
-        validacao.data
-      );
-
-      sessionStorage.setItem(TOKEN_KEY, resposta.data.token);
-
-      sessionStorage.setItem(
-        'petcare_usuario',
-        JSON.stringify(resposta.data.usuario)
-      );
+      await login(validacao.data);
 
       navigate('/home', { replace: true });
 
     } catch (error) {
+      setErrosCampos(errosApi(error));
       setErro(mensagemErro(error, 'Não foi possível realizar o login.'));
     } finally {
       setCarregando(false);
     }
   }
+
+  if (session) return <Navigate to="/home" replace />;
 
   return (
     <Stack
@@ -116,17 +103,20 @@ export default function Login() {
             </Text>
           </Stack>
 
+          {location.state?.cadastroConcluido && <Alert color="green" role="status">Conta cadastrada com sucesso! Entre com seu e-mail e senha.</Alert>}
           {erro && (
             <Alert color="red" title="Não foi possível entrar">
               {erro}
             </Alert>
           )}
 
-          <form onSubmit={entrar}>
+          <form onSubmit={entrar} noValidate>
             <Stack gap="md">
 
               <TextInput
                 label="E-mail"
+                type="email"
+                autoComplete="username"
                 placeholder="seuemail@email.com"
                 value={email}
                 onChange={(event) => setEmail(event.currentTarget.value)}
@@ -136,6 +126,7 @@ export default function Login() {
 
               <PasswordInput
                 label="Senha"
+                autoComplete="current-password"
                 placeholder="Digite sua senha"
                 value={senha}
                 onChange={(event) => setSenha(event.currentTarget.value)}
@@ -155,6 +146,8 @@ export default function Login() {
 
             </Stack>
           </form>
+
+          <Anchor component={Link} to="/cadastro">Criar conta</Anchor>
 
           <Text size="xs" c="dimmed" ta="center">
             Sistema de gerenciamento PetCare

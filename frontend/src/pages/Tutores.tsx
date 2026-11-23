@@ -26,9 +26,10 @@ import {
   Users,
 } from 'lucide-react';
 
+import { matchesTutor } from '../utils/search';
 import { tutorSchema } from '../contracts';
 import { tutorService, type Tutor } from '../services/tutorService';
-import { mensagemErro } from '../utils/apiError';
+import { errosApi, mensagemErro } from '../utils/apiError';
 
 type TutorForm = {
   nome: string;
@@ -82,6 +83,8 @@ export default function Tutores() {
 
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
+  const [excluindo, setExcluindo] = useState(false);
+  const [erroCarga, setErroCarga] = useState('');
 
   const [busca, setBusca] = useState('');
 
@@ -108,18 +111,15 @@ export default function Tutores() {
   async function carregarTutores() {
     try {
       setCarregando(true);
+      setErroCarga('');
 
       const dados = await tutorService.listar();
 
       setTutores(dados);
-      setMensagem('');
-      setTipoMensagem(null);
+
 
     } catch (error) {
-      setMensagem(
-        mensagemErro(error, 'Não foi possível carregar os tutores.')
-      );
-      setTipoMensagem('error');
+      setErroCarga(mensagemErro(error, 'Não foi possível carregar os dados.'));
 
     } finally {
       setCarregando(false);
@@ -135,6 +135,8 @@ export default function Tutores() {
     setTutorSelecionado(null);
     setFormulario(formularioVazio);
     setErrosCampos({});
+    setMensagem('');
+    setTipoMensagem(null);
     setModalAberto(true);
   }
 
@@ -149,6 +151,8 @@ export default function Tutores() {
     });
 
     setErrosCampos({});
+    setMensagem('');
+    setTipoMensagem(null);
     setModalAberto(true);
   }
 
@@ -201,6 +205,7 @@ export default function Tutores() {
       await carregarTutores();
 
     } catch (error) {
+      setErrosCampos(errosApi(error));
       setMensagem(
         mensagemErro(error, 'Não foi possível salvar o tutor.')
       );
@@ -215,6 +220,8 @@ export default function Tutores() {
   async function excluirTutor() {
     if (!tutorParaExcluir) return;
 
+    if (excluindo) return;
+    setExcluindo(true);
     try {
       await tutorService.excluir(tutorParaExcluir.id);
 
@@ -232,18 +239,11 @@ export default function Tutores() {
       );
       setTipoMensagem('error');
 
-    }
+    } finally { setExcluindo(false); }
   }
 
   // Pesquisa local usando filter
-  const tutoresFiltrados = tutores.filter((tutor) => {
-    const termo = busca.toLocaleLowerCase('pt-BR');
-
-    return (
-      tutor.nome.toLocaleLowerCase('pt-BR').includes(termo) ||
-      tutor.cpf.includes(somenteNumeros(termo))
-    );
-  });
+  const tutoresFiltrados = tutores.filter(tutor => matchesTutor(tutor, busca));
 
   return (
     <Stack gap="lg">
@@ -272,7 +272,8 @@ export default function Tutores() {
       </Group>
 
       {/* Mensagens */}
-      {mensagem && (
+      {erroCarga && <Alert color="red" role="alert">{erroCarga}</Alert>}
+      {mensagem && !modalAberto && !modalExcluir && (
         <Alert
           color={tipoMensagem === 'success' ? 'green' : 'red'}
           icon={
@@ -282,6 +283,7 @@ export default function Tutores() {
           }
           withCloseButton
           onClose={() => setMensagem('')}
+          role={tipoMensagem === 'success' ? 'status' : 'alert'}
         >
           {mensagem}
         </Alert>
@@ -300,6 +302,7 @@ export default function Tutores() {
           </div>
 
           <TextInput
+            aria-label="Pesquisar tutores"
             placeholder="Pesquisar nome ou CPF..."
             leftSection={<Search size={17} />}
             value={busca}
@@ -312,6 +315,8 @@ export default function Tutores() {
           <Text c="dimmed" ta="center" py="xl">
             Carregando tutores...
           </Text>
+        ) : erroCarga ? (
+          <Text c="dimmed" ta="center" py="xl">Lista indisponível. Atualize a página para tentar novamente.</Text>
         ) : tutoresFiltrados.length === 0 ? (
           <Text c="dimmed" ta="center" py="xl">
             {busca
@@ -366,6 +371,8 @@ export default function Tutores() {
                             aria-label="Excluir tutor"
                             onClick={() => {
                               setTutorParaExcluir(tutor);
+                              setMensagem('');
+                              setTipoMensagem(null);
                               setModalExcluir(true);
                             }}
                           >
@@ -386,12 +393,13 @@ export default function Tutores() {
       {/* Modal de cadastro e edição */}
       <Modal
         opened={modalAberto}
-        onClose={() => setModalAberto(false)}
+        onClose={() => { if (!salvando) setModalAberto(false); }}
         title={tutorSelecionado ? 'Editar tutor' : 'Cadastrar tutor'}
         centered
       >
-        <form onSubmit={salvarTutor}>
+        <form noValidate onSubmit={salvarTutor}>
           <Stack gap="md">
+            {mensagem && tipoMensagem === 'error' && <Alert color="red" role="alert">{mensagem}</Alert>}
 
             <TextInput
               label="Nome completo"
@@ -440,6 +448,7 @@ export default function Tutores() {
             <Group justify="flex-end" mt="md">
               <Button
                 variant="default"
+                disabled={salvando}
                 onClick={() => setModalAberto(false)}
               >
                 Cancelar
@@ -461,12 +470,13 @@ export default function Tutores() {
       {/* Confirmação de exclusão */}
       <Modal
         opened={modalExcluir}
-        onClose={() => setModalExcluir(false)}
+        onClose={() => { if (!excluindo) setModalExcluir(false); }}
         title="Excluir tutor"
         centered
         size="sm"
       >
         <Stack gap="md">
+          {mensagem && tipoMensagem === 'error' && <Alert color="red" role="alert">{mensagem}</Alert>}
           <Text size="sm">
             Deseja realmente excluir o tutor{' '}
             <strong>{tutorParaExcluir?.nome}</strong>?
@@ -480,6 +490,7 @@ export default function Tutores() {
           <Group justify="flex-end">
             <Button
               variant="default"
+              disabled={excluindo}
               onClick={() => setModalExcluir(false)}
             >
               Cancelar
@@ -488,6 +499,7 @@ export default function Tutores() {
             <Button
               color="red"
               leftSection={<Trash2 size={16} />}
+              loading={excluindo}
               onClick={excluirTutor}
             >
               Excluir

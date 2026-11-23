@@ -7,6 +7,7 @@ import '@mantine/core/styles.css';
 import './styles/global.css';
 
 import App from './App';
+import { AuthProvider } from './auth/AuthContext';
 
 // Configuração visual do sistema
 const theme = createTheme({
@@ -21,7 +22,7 @@ ReactDOM.createRoot(
   <React.StrictMode>
     <MantineProvider theme={theme}>
       <BrowserRouter>
-        <App />
+        <AuthProvider><App /></AuthProvider>
       </BrowserRouter>
     </MantineProvider>
   </React.StrictMode>

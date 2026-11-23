@@ -22,3 +22,7 @@ body {
   justify-content: center;
   font-size: 18px;
 }
+
+@media (max-width: 480px) {
+  .usuario-resumo { display: none; }
+}

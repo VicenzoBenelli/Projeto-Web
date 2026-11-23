@@ -40,7 +40,7 @@ import {
   type Tutor,
 } from '../services/tutorService';
 
-import { mensagemErro } from '../utils/apiError';
+import { errosApi, mensagemErro } from '../utils/apiError';
 
 type AnimalForm = {
   nome: string;
@@ -78,6 +78,8 @@ export default function Animais() {
 
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
+  const [excluindo, setExcluindo] = useState(false);
+  const [erroCarga, setErroCarga] = useState('');
 
   const [busca, setBusca] = useState('');
 
@@ -105,6 +107,7 @@ export default function Animais() {
   async function carregarDados() {
     try {
       setCarregando(true);
+      setErroCarga('');
 
       const [listaAnimais, listaTutores] = await Promise.all([
         animalService.listar(),
@@ -115,11 +118,7 @@ export default function Animais() {
       setTutores(listaTutores);
 
     } catch (error) {
-      setMensagem(
-        mensagemErro(error, 'Não foi possível carregar os dados.')
-      );
-
-      setTipoMensagem('error');
+      setErroCarga(mensagemErro(error, 'Não foi possível carregar os dados.'));
 
     } finally {
       setCarregando(false);
@@ -135,6 +134,8 @@ export default function Animais() {
     setAnimalSelecionado(null);
     setFormulario(formularioVazio);
     setErrosCampos({});
+    setMensagem('');
+    setTipoMensagem(null);
     setModalAberto(true);
   }
 
@@ -150,6 +151,8 @@ export default function Animais() {
     });
 
     setErrosCampos({});
+    setMensagem('');
+    setTipoMensagem(null);
     setModalAberto(true);
   }
 
@@ -204,6 +207,7 @@ export default function Animais() {
       await carregarDados();
 
     } catch (error) {
+      setErrosCampos(errosApi(error));
       setMensagem(
         mensagemErro(error, 'Não foi possível salvar o animal.')
       );
@@ -219,6 +223,8 @@ export default function Animais() {
   async function excluirAnimal() {
     if (!animalParaExcluir) return;
 
+    if (excluindo) return;
+    setExcluindo(true);
     try {
       await animalService.excluir(animalParaExcluir.id);
 
@@ -236,7 +242,7 @@ export default function Animais() {
       );
 
       setTipoMensagem('error');
-    }
+    } finally { setExcluindo(false); }
   }
 
   // Busca local por nome, raça ou tutor
@@ -252,7 +258,7 @@ export default function Animais() {
 
   const opcoesTutores = tutores.map((tutor) => ({
     value: String(tutor.id),
-    label: tutor.nome,
+    label: `${tutor.nome} — CPF ${tutor.cpf}`,
   }));
 
   return (
@@ -283,7 +289,8 @@ export default function Animais() {
       </Group>
 
       {/* Mensagens */}
-      {mensagem && (
+      {erroCarga && <Alert color="red" role="alert">{erroCarga}</Alert>}
+      {mensagem && !modalAberto && !modalExcluir && (
         <Alert
           color={tipoMensagem === 'success' ? 'green' : 'red'}
           icon={
@@ -293,12 +300,13 @@ export default function Animais() {
           }
           withCloseButton
           onClose={() => setMensagem('')}
+          role={tipoMensagem === 'success' ? 'status' : 'alert'}
         >
           {mensagem}
         </Alert>
       )}
 
-      {!carregando && tutores.length === 0 && (
+      {!carregando && !erroCarga && tutores.length === 0 && (
         <Alert color="yellow" title="Nenhum tutor cadastrado">
           Para cadastrar um animal, primeiro cadastre pelo menos
           um tutor na tela de Tutores.
@@ -318,6 +326,7 @@ export default function Animais() {
           </div>
 
           <TextInput
+            aria-label="Pesquisar animais"
             placeholder="Pesquisar animal ou tutor..."
             leftSection={<Search size={17} />}
             value={busca}
@@ -330,6 +339,8 @@ export default function Animais() {
           <Text c="dimmed" ta="center" py="xl">
             Carregando animais...
           </Text>
+        ) : erroCarga ? (
+          <Text c="dimmed" ta="center" py="xl">Lista indisponível. Atualize a página para tentar novamente.</Text>
         ) : animaisFiltrados.length === 0 ? (
           <Text c="dimmed" ta="center" py="xl">
             {busca
@@ -391,6 +402,8 @@ export default function Animais() {
                             aria-label="Excluir animal"
                             onClick={() => {
                               setAnimalParaExcluir(animal);
+                              setMensagem('');
+                              setTipoMensagem(null);
                               setModalExcluir(true);
                             }}
                           >
@@ -411,12 +424,13 @@ export default function Animais() {
       {/* Modal de cadastro e edição */}
       <Modal
         opened={modalAberto}
-        onClose={() => setModalAberto(false)}
+        onClose={() => { if (!salvando) setModalAberto(false); }}
         title={animalSelecionado ? 'Editar animal' : 'Cadastrar animal'}
         centered
       >
-        <form onSubmit={salvarAnimal}>
+        <form noValidate onSubmit={salvarAnimal}>
           <Stack gap="md">
+            {mensagem && tipoMensagem === 'error' && <Alert color="red" role="alert">{mensagem}</Alert>}
 
             <TextInput
               label="Nome do animal"
@@ -481,6 +495,7 @@ export default function Animais() {
             <Group justify="flex-end" mt="md">
               <Button
                 variant="default"
+                disabled={salvando}
                 onClick={() => setModalAberto(false)}
               >
                 Cancelar
@@ -502,12 +517,13 @@ export default function Animais() {
       {/* Confirmação de exclusão */}
       <Modal
         opened={modalExcluir}
-        onClose={() => setModalExcluir(false)}
+        onClose={() => { if (!excluindo) setModalExcluir(false); }}
         title="Excluir animal"
         centered
         size="sm"
       >
         <Stack gap="md">
+          {mensagem && tipoMensagem === 'error' && <Alert color="red" role="alert">{mensagem}</Alert>}
           <Text size="sm">
             Deseja realmente excluir o animal{' '}
             <strong>{animalParaExcluir?.nome}</strong>?
@@ -521,6 +537,7 @@ export default function Animais() {
           <Group justify="flex-end">
             <Button
               variant="default"
+              disabled={excluindo}
               onClick={() => setModalExcluir(false)}
             >
               Cancelar
@@ -529,6 +546,7 @@ export default function Animais() {
             <Button
               color="red"
               leftSection={<Trash2 size={16} />}
+              loading={excluindo}
               onClick={excluirAnimal}
             >
               Excluir

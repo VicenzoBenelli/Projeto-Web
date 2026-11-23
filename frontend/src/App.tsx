@@ -9,6 +9,7 @@ import AppLayout from './components/AppLayout';
 import ProtectedRoute from './routes/ProtectedRoute';
 
 import Login from './pages/Login';
+import Cadastro from './pages/Cadastro';
 import Home from './pages/Home';
 import Tutores from './pages/Tutores';
 import Animais from './pages/Animais';
@@ -20,6 +21,7 @@ export default function App() {
 
       {/* Página pública */}
       <Route path="/login" element={<Login />} />
+      <Route path="/cadastro" element={<Cadastro />} />
 
       {/* Páginas que exigem autenticação */}
       <Route element={<ProtectedRoute />}>

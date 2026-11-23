@@ -24,7 +24,7 @@ import {
   LogOut,
 } from 'lucide-react';
 
-import { TOKEN_KEY } from '../services/api';
+import { useAuth } from '../auth/AuthContext';
 
 const menuItems = [
   { label: 'Visão geral', to: '/home', icon: House },
@@ -35,6 +35,7 @@ const menuItems = [
 ];
 
 export default function AppLayout() {
+  const { session, logout } = useAuth();
   const [opened, setOpened] = useState(false);
 
   const navigate = useNavigate();
@@ -42,8 +43,7 @@ export default function AppLayout() {
 
   // Encerra a sessão do usuário
   function sair() {
-    sessionStorage.removeItem(TOKEN_KEY);
-    sessionStorage.removeItem('petcare_usuario');
+    logout();
 
     setOpened(false);
 
@@ -69,6 +69,7 @@ export default function AppLayout() {
               onClick={() => setOpened((value) => !value)}
               hiddenFrom="sm"
               size="sm"
+              aria-label="Abrir menu de navegação"
             />
 
             <Group gap={8}>
@@ -88,9 +89,9 @@ export default function AppLayout() {
               P
             </Avatar>
 
-            <div>
+            <div className="usuario-resumo">
               <Text size="sm" fw={600}>
-                Área administrativa
+                {session?.usuario.nome}
               </Text>
 
               <Text size="xs" c="dimmed">
