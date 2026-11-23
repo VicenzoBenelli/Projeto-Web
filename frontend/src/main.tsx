@@ -1,12 +1,28 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import '@mantine/core/styles.css';
-import { MantineProvider, Container, Title, Text } from '@mantine/core';
+import { BrowserRouter } from 'react-router-dom';
+import { MantineProvider, createTheme } from '@mantine/core';
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+import '@mantine/core/styles.css';
+import './styles/global.css';
+
+import App from './App';
+
+// Configuração visual do sistema
+const theme = createTheme({
+  primaryColor: 'teal',
+  defaultRadius: 'lg',
+  fontFamily: 'Inter, system-ui, sans-serif',
+});
+
+ReactDOM.createRoot(
+  document.getElementById('root')!
+).render(
   <React.StrictMode>
-    <MantineProvider>
-      <Container py="xl"><Title order={1}>Pet Shop</Title><Text>Estrutura inicial. A interface será implementada por Gabriel e Marcos.</Text></Container>
+    <MantineProvider theme={theme}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
     </MantineProvider>
-  </React.StrictMode>,
+  </React.StrictMode>
 );
