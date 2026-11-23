@@ -249,3 +249,27 @@ o commit autoral de Gabriel, correções com identidade real de Vicenzo,
 fast-forward na main, push normal e CI real do SHA final com sucesso. SHA,
 commits e resultado remoto serão apresentados na entrega final da sessão,
 após a publicação. A Onda 04 não foi iniciada; a liberação pertence ao operador.
+
+### Verificação remota e ajuste de sincronização
+
+O primeiro commit de correções, `087088a50589697b6bd7d2f5ab75255dbb9084f7`,
+foi integrado por fast-forward e publicado com a autoria real de Vicenzo,
+preservando Gabriel. A execução Actions
+[45275720430](https://github.com/VicenzoBenelli/Projeto-Web/actions/runs/45275720430)
+passou instalação, builds, Prisma, migrations, seed e os 74 testes, mas falhou
+nos dois testes de navegador ao esperar o alerta do login inválido. Essa
+execução não foi considerada homologação aprovada.
+
+O executor passou a aguardar explicitamente URL e título da página de login
+após sair do cadastro, antes de preencher os campos, e a exigir a resposta 401
+real. Foram mantidas as verificações do alerta, sessão e todos os demais fluxos.
+Falhas futuras registram diagnóstico com caminhos, status e comprimentos dos
+campos, sem seus valores, corpos ou headers. Não houve alteração do produto,
+backend ou contrato para acomodar esse ajuste. A conclusão da nova execução
+remota, referente ao SHA posterior, deve ser conferida no relatório final.
+
+Repetição local após esse ajuste: **74/74** e **2 passed (2.0m)**, sem skips
+ou erros inesperados. Logs tests-ci-sync.log e e2e-ci-sync.log na mesma pasta
+do gate; artefatos em `%TEMP%/petshop-ui-4gAEFu`. Bancos
+`petshop_test_579540ab94824e08802f15dbce074b30` e
+`petshop_e2e_85ecbac05b5644749fabc9ccd6cb7682` removidos pelos próprios runners.

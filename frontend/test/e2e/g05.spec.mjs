@@ -81,10 +81,14 @@ test('G05: jornada React, Axios e PostgreSQL real', async ({ page }, info) => {
       await page.getByRole('button', { name: 'Cadastrar conta' }).click();
       await expect(page.getByRole('alert')).toContainText('já cadastrado');
       await page.getByRole('link', { name: /Já tenho conta/ }).click();
+      await expect(page).toHaveURL(/\/login$/);
+      await expect(page.getByRole('heading', { name: 'PetCare', exact: true })).toBeVisible();
     });
     await step('05 login inválido e válido; sessão pública sem senha', async () => {
       await page.getByLabel('E-mail').fill(email); await page.getByLabel(/^Senha/).fill('Incorreta123');
+      const rejected = page.waitForResponse(r => r.url().endsWith('/auth/login') && r.status() === 401);
       await page.getByRole('button', { name: 'Entrar', exact: true }).click();
+      await rejected;
       await expect(page.getByRole('alert')).toContainText('E-mail ou senha inválidos');
       await login();
       const keys = await page.evaluate(() => Object.keys(JSON.parse(sessionStorage.getItem('petcare_usuario'))).sort());
@@ -241,5 +245,17 @@ test('G05: jornada React, Axios e PostgreSQL real', async ({ page }, info) => {
     });
     writeFileSync(info.outputPath('evidencias.json'), JSON.stringify({ viewport: info.project.use.viewport, steps, requests, responses, unexpectedConsoleErrors: errors }, null, 2));
     expect(errors).toEqual([]);
+  } catch (cause) {
+      // Diagnóstico sem valores dos campos, corpos, headers ou tokens.
+      console.info('G05 diagnóstico de falha:', JSON.stringify({
+        path: new URL(page.url()).pathname,
+        headings: await page.getByRole('heading').allTextContents(),
+        alerts: await page.getByRole('alert').allTextContents(),
+        inputs: await page.locator('input').evaluateAll(inputs => inputs.map(input => ({
+          type: input.type, length: input.value.length, invalid: input.getAttribute('aria-invalid'),
+        }))),
+        requests: requests.slice(-8), responses: responses.slice(-8),
+      }));
+    throw cause;
   } finally { await db.$disconnect(); }
 });
