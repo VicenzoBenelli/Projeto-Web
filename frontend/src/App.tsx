@@ -13,6 +13,7 @@ import Cadastro from './pages/Cadastro';
 import Home from './pages/Home';
 import Tutores from './pages/Tutores';
 import Animais from './pages/Animais';
+import Servicos from './pages/Servicos';
 import ModuloEmConstrucao from './pages/ModuloEmConstrucao';
 
 export default function App() {
@@ -39,15 +40,7 @@ export default function App() {
 
           <Route path="animais" element={<Animais />} />
 
-          <Route
-            path="servicos"
-            element={
-              <ModuloEmConstrucao
-                titulo="Serviços"
-                descricao="Cadastro e gerenciamento dos serviços."
-              />
-            }
-          />
+          <Route path="servicos" element={<Servicos />} />
 
           <Route
             path="agendamentos"
