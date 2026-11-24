@@ -10,12 +10,14 @@ import {
   Stack,
   Table,
   Text,
+  TextInput,
   Title,
   Tooltip,
 } from '@mantine/core';
 
 import {
   Plus,
+  Search,
   Pencil,
   Trash2,
   AlertCircle,
@@ -43,6 +45,8 @@ export default function Servicos() {
   const [salvando, setSalvando] = useState(false);
   const [excluindo, setExcluindo] = useState(false);
   const [erroCarga, setErroCarga] = useState('');
+
+  const [busca, setBusca] = useState('');
 
   const [modalAberto, setModalAberto] = useState(false);
   const [modalExcluir, setModalExcluir] = useState(false);
@@ -223,6 +227,18 @@ export default function Servicos() {
     } finally { setExcluindo(false); }
   }
 
+  // Pesquisa local usando filter (nome ou descrição)
+  const servicosFiltrados = servicos.filter((servico) => {
+    const termo = busca.trim().toLocaleLowerCase('pt-BR');
+
+    if (!termo) return true;
+
+    return (
+      servico.nome.toLocaleLowerCase('pt-BR').includes(termo) ||
+      (servico.descricao ?? '').toLocaleLowerCase('pt-BR').includes(termo)
+    );
+  });
+
   return (
     <Stack gap="lg">
 
@@ -275,9 +291,18 @@ export default function Servicos() {
             <Title order={4}>Lista de serviços</Title>
 
             <Text size="xs" c="dimmed">
-              {servicos.length} registro(s) encontrado(s)
+              {servicosFiltrados.length} registro(s) encontrado(s)
             </Text>
           </div>
+
+          <TextInput
+            aria-label="Pesquisar serviços"
+            placeholder="Pesquisar nome ou descrição..."
+            leftSection={<Search size={17} />}
+            value={busca}
+            onChange={(event) => setBusca(event.currentTarget.value)}
+            w={{ base: '100%', sm: 280 }}
+          />
         </Group>
 
         {carregando ? (
@@ -286,9 +311,11 @@ export default function Servicos() {
           </Text>
         ) : erroCarga ? (
           <Text c="dimmed" ta="center" py="xl">Lista indisponível. Atualize a página para tentar novamente.</Text>
-        ) : servicos.length === 0 ? (
+        ) : servicosFiltrados.length === 0 ? (
           <Text c="dimmed" ta="center" py="xl">
-            Ainda não existem serviços cadastrados.
+            {busca
+              ? 'Nenhum serviço encontrado para essa pesquisa.'
+              : 'Ainda não existem serviços cadastrados.'}
           </Text>
         ) : (
           <Table.ScrollContainer minWidth={650}>
@@ -304,7 +331,7 @@ export default function Servicos() {
               </Table.Thead>
 
               <Table.Tbody>
-                {servicos.map((servico) => (
+                {servicosFiltrados.map((servico) => (
                   <Table.Tr key={servico.id}>
                     <Table.Td>
                       <Text fw={600}>{servico.nome}</Text>

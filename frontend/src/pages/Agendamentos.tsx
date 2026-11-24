@@ -11,12 +11,14 @@ import {
   Stack,
   Table,
   Text,
+  TextInput,
   Title,
   Tooltip,
 } from '@mantine/core';
 
 import {
   Plus,
+  Search,
   Pencil,
   Trash2,
   AlertCircle,
@@ -66,6 +68,8 @@ export default function Agendamentos() {
   const [salvando, setSalvando] = useState(false);
   const [excluindo, setExcluindo] = useState(false);
   const [erroCarga, setErroCarga] = useState('');
+
+  const [busca, setBusca] = useState('');
 
   const [modalAberto, setModalAberto] = useState(false);
   const [modalExcluir, setModalExcluir] = useState(false);
@@ -260,6 +264,20 @@ export default function Agendamentos() {
     } finally { setExcluindo(false); }
   }
 
+  // Pesquisa local usando filter (animal, tutor, serviço ou status)
+  const agendamentosFiltrados = agendamentos.filter((agendamento) => {
+    const termo = busca.trim().toLocaleLowerCase('pt-BR');
+
+    if (!termo) return true;
+
+    return (
+      agendamento.animal.nome.toLocaleLowerCase('pt-BR').includes(termo) ||
+      agendamento.animal.tutor.nome.toLocaleLowerCase('pt-BR').includes(termo) ||
+      agendamento.servico.nome.toLocaleLowerCase('pt-BR').includes(termo) ||
+      rotulosStatus[agendamento.status].toLocaleLowerCase('pt-BR').includes(termo)
+    );
+  });
+
   return (
     <Stack gap="lg">
 
@@ -312,9 +330,18 @@ export default function Agendamentos() {
             <Title order={4}>Lista de agendamentos</Title>
 
             <Text size="xs" c="dimmed">
-              {agendamentos.length} registro(s) encontrado(s)
+              {agendamentosFiltrados.length} registro(s) encontrado(s)
             </Text>
           </div>
+
+          <TextInput
+            aria-label="Pesquisar agendamentos"
+            placeholder="Pesquisar animal, tutor, serviço..."
+            leftSection={<Search size={17} />}
+            value={busca}
+            onChange={(event) => setBusca(event.currentTarget.value)}
+            w={{ base: '100%', sm: 280 }}
+          />
         </Group>
 
         {carregando ? (
@@ -323,9 +350,11 @@ export default function Agendamentos() {
           </Text>
         ) : erroCarga ? (
           <Text c="dimmed" ta="center" py="xl">Lista indisponível. Atualize a página para tentar novamente.</Text>
-        ) : agendamentos.length === 0 ? (
+        ) : agendamentosFiltrados.length === 0 ? (
           <Text c="dimmed" ta="center" py="xl">
-            Ainda não existem agendamentos cadastrados.
+            {busca
+              ? 'Nenhum agendamento encontrado para essa pesquisa.'
+              : 'Ainda não existem agendamentos cadastrados.'}
           </Text>
         ) : (
           <Table.ScrollContainer minWidth={760}>
@@ -342,7 +371,7 @@ export default function Agendamentos() {
               </Table.Thead>
 
               <Table.Tbody>
-                {agendamentos.map((agendamento) => (
+                {agendamentosFiltrados.map((agendamento) => (
                   <Table.Tr key={agendamento.id}>
                     <Table.Td>
                       <Text fw={600}>
