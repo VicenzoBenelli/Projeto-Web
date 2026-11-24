@@ -14,7 +14,7 @@ import Home from './pages/Home';
 import Tutores from './pages/Tutores';
 import Animais from './pages/Animais';
 import Servicos from './pages/Servicos';
-import ModuloEmConstrucao from './pages/ModuloEmConstrucao';
+import Agendamentos from './pages/Agendamentos';
 
 export default function App() {
   return (
@@ -42,15 +42,7 @@ export default function App() {
 
           <Route path="servicos" element={<Servicos />} />
 
-          <Route
-            path="agendamentos"
-            element={
-              <ModuloEmConstrucao
-                titulo="Agendamentos"
-                descricao="Gerenciamento dos horários de atendimento."
-              />
-            }
-          />
+          <Route path="agendamentos" element={<Agendamentos />} />
 
         </Route>
       </Route>
