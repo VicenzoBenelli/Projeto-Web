@@ -56,7 +56,11 @@ try {
   assert.equal((await admin.$queryRaw`SELECT datname FROM pg_database WHERE datname=${database}`).length, 0);
   await admin.$executeRawUnsafe(`CREATE DATABASE "${database}"`); created = true;
   console.info(`E2E banco criado: ${database}; artefatos: ${output}`);
-  await run([resolve(root, 'node_modules/prisma/build/index.js'), 'migrate', 'deploy'], apiDir);
+  const prisma = resolve(root, 'node_modules/prisma/build/index.js');
+  await run([prisma, 'validate'], apiDir);
+  await run([prisma, 'migrate', 'deploy'], apiDir);
+  await run([prisma, 'migrate', 'diff', '--from-schema-datasource', 'prisma/schema.prisma',
+    '--to-schema-datamodel', 'prisma/schema.prisma', '--exit-code'], apiDir);
   await run(['prisma/verify-seed.mjs'], apiDir);
   const apiPort = await freePort(); const uiPort = await freePort();
   Object.assign(env, { PORT: String(apiPort), CORS_ORIGIN: `http://127.0.0.1:${uiPort}`,

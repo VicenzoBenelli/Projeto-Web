@@ -159,6 +159,7 @@ export default function Tutores() {
   // Salva um tutor novo ou atualizado
   async function salvarTutor(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (salvando) return;
 
     setMensagem('');
     setTipoMensagem(null);

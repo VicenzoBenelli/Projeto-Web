@@ -159,6 +159,7 @@ export default function Animais() {
   // Salva um animal
   async function salvarAnimal(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (salvando) return;
 
     setMensagem('');
     setErrosCampos({});
@@ -282,7 +283,7 @@ export default function Animais() {
           color="teal"
           leftSection={<Plus size={18} />}
           onClick={abrirCadastro}
-          disabled={tutores.length === 0}
+          disabled={carregando || !!erroCarga || tutores.length === 0}
         >
           Novo animal
         </Button>

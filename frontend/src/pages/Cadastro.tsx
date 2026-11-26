@@ -16,7 +16,10 @@ export default function Cadastro() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   async function cadastrar(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setError(''); setErrors({});
+    event.preventDefault();
+    if (loading) return;
+    setError('');
+    setErrors({});
     const result = cadastroSchema.safeParse({ nome, email, senha });
     if (!result.success) {
       setErrors(Object.fromEntries(result.error.issues.map(issue => [issue.path.join('.'), issue.message])));

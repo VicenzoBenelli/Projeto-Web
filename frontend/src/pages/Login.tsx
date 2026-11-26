@@ -34,6 +34,7 @@ export default function Login() {
 
   async function entrar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (carregando) return;
 
     setErro('');
     setErrosCampos({});

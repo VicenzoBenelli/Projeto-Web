@@ -73,7 +73,7 @@ jobs:
         run: npm test
       - name: Instalar Chromium para testes da interface
         run: npm exec -w frontend -- playwright install --with-deps chromium
-      - name: Validar interface real em notebook e mobile
+      - name: Validar G05, M05 e jornada global em notebook e mobile
         run: npm run test:e2e -w frontend
 
   audit:

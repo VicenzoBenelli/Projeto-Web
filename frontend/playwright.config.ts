@@ -18,7 +18,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'notebook', use: { viewport: { width: 1366, height: 768 } } },
-    { name: 'mobile', use: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } },
+    { name: 'notebook', use: { viewport: { width: 1366, height: 768 }, timezoneId: 'UTC' } },
+    { name: 'mobile', use: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, timezoneId: 'America/Fortaleza' } },
   ],
 });

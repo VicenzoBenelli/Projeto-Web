@@ -1,6 +1,6 @@
 # Quarta onda — Evidências (M01–M05)
 
-> Nota temporária para o README final e o vídeo. Nenhum commit/push foi feito nesta onda.
+> Nota de trabalho para o README acadêmico e o vídeo. A edição inicial foi escrita antes da publicação. Os cinco commits da onda chegaram à `main` até `9b57c1c`.
 
 ## Comandos que funcionaram (Linux + Podman/Docker)
 
@@ -15,7 +15,7 @@ npm run db:verify-seed -w api
 npm run dev:api                          # http://localhost:3001 (Swagger em /docs/)
 npm run dev:frontend                     # http://localhost:5173
 npm run build                            # shared + api + frontend, código 0
-npm test                                 # shared + api + frontend + integração: 55 testes, 0 falhas
+npm test                                 # shared + api + frontend + integração: 55 testes, 0 falhas no registro original
 ```
 
 Credenciais demo: `professor@petshop.com` / `PetShop@2026!`
@@ -42,7 +42,14 @@ Credenciais demo: `professor@petshop.com` / `PetShop@2026!`
 - API via cliente HTTP: 401 sem token, 400 Zod, 404 id inexistente, 409 duplicado e 409 FK; sem senha/senhaHash em respostas.
 - Telas de Tutores e Animais (Gabriel) seguem carregando após as mudanças.
 
-## M05 — Pendências
+## Validação posterior à publicação
+
+O registro de 55 testes acima descreve a execução original. A CI do SHA
+`9b57c1ccacf5dfca2846e6cbd1bd0593d3b4c66e` registrou 80 testes e duas jornadas
+de navegador do G05. Veja a [execução da quarta onda](https://github.com/VicenzoBenelli/Projeto-Web/actions/runs/45461679314)
+e os totais e a cobertura posteriores no [Gate Final A2](GATE-FINAL-A2.md).
+
+## M05 — Pendências registradas ao fim da onda
 - Bloqueantes: nenhuma conhecida.
 - Não bloqueantes: bundle do frontend > 500 kB (aviso de chunk do Vite, sem impacto funcional); `ModuloEmConstrucao.tsx` ficou sem uso após o cutover das rotas (pode ser removido antes do commit, se o grupo concordar — não removido para evitar conflito com trabalho simultâneo).
 - README final e vídeo: pendentes por decisão do plano (não antecipados).

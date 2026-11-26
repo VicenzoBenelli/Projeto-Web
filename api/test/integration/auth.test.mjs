@@ -80,6 +80,14 @@ test('JSON malformado e rota desconhecida têm respostas controladas', async () 
   assert.equal(missing.status, 404);
   assert.deepEqual(await missing.json(), { message: 'Rota não encontrada' });
 });
+test('corpo acima do limite recebe 400 e a API continua saudável', async () => {
+  const oversized = await request('/auth/login', { ...input, nome: 'a'.repeat(102400) });
+  assert.deepEqual(oversized, {
+    status: 400, body: { message: 'Corpo da requisição acima do limite permitido' },
+  });
+  assert.equal((await fetch(base + '/health')).status, 200);
+});
+
 test('middleware Bearer rejeita token ausente, inválido, expirado e algoritmo indevido', async () => {
   const harness = express();
   harness.get('/', autenticar, (req, res) => res.json(req.auth));

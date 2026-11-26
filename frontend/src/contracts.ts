@@ -1,4 +1,4 @@
-// Disponível para a próxima onda de frontend; não implementa telas.
+
 export {
   tutorSchema, animalSchema, servicoSchema, agendamentoSchema, cadastroSchema, loginSchema,
   statusAgendamentos,

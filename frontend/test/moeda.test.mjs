@@ -17,7 +17,7 @@ test('entradas inválidas de preço viram null em vez de número errado', () => 
   assert.equal(paraCentavos('50,000'), null);
 });
 
-test('máscara de entrada formata dígitos como reais progressivamente', () => {
+test('formata centavos inteiros para edição em reais', () => {
   assert.equal(formatarEntradaMoeda('5000'), '50,00');
   assert.equal(formatarEntradaMoeda('505'), '5,05');
   assert.equal(formatarEntradaMoeda('abc'), '');

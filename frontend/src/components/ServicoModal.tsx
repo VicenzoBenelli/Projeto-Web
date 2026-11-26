@@ -12,6 +12,7 @@ import {
 
 import { AlertCircle } from 'lucide-react';
 
+import { formatarEntradaMoeda, paraCentavos } from '../utils/moeda';
 import type { Servico } from '../services/servicoService';
 
 export type ServicoForm = {
@@ -78,9 +79,14 @@ export default function ServicoModal({
           <TextInput
             label="Preço (R$)"
             placeholder="0,00"
+            description="Digite em reais, por exemplo 80,50."
             inputMode="decimal"
             value={formulario.preco}
             onChange={(event) => onAlterarCampo('preco', event.currentTarget.value)}
+            onBlur={(event) => {
+              const centavos = paraCentavos(event.currentTarget.value);
+              if (centavos !== null) onAlterarCampo('preco', formatarEntradaMoeda(String(centavos)));
+            }}
             error={errosCampos.precoCentavos}
             required
           />

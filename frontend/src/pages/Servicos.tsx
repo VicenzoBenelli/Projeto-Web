@@ -29,6 +29,7 @@ import { servicoSchema } from '../contracts';
 import { servicoService, type Servico } from '../services/servicoService';
 import { errosApi, mensagemErro } from '../utils/apiError';
 import { formatarBRL, formatarEntradaMoeda, paraCentavos } from '../utils/moeda';
+import { inteiroPositivo } from '../utils/inteiro';
 import ServicoModal, { type ServicoForm } from '../components/ServicoModal';
 
 const formularioVazio: ServicoForm = {
@@ -90,13 +91,7 @@ export default function Servicos() {
   }, []);
 
   function alterarCampo(campo: keyof ServicoForm, valor: string) {
-    // O preço ganha máscara progressiva de moeda enquanto o usuário digita.
-    if (campo === 'preco') {
-      setFormulario({ ...formulario, preco: formatarEntradaMoeda(valor) });
-      return;
-    }
-
-    setFormulario({ ...formulario, [campo]: valor });
+    setFormulario(anterior => ({ ...anterior, [campo]: valor }));
   }
 
   // Abre o modal para cadastrar
@@ -130,6 +125,7 @@ export default function Servicos() {
   // Salva um serviço novo ou atualizado
   async function salvarServico(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (salvando) return;
 
     setMensagem('');
     setTipoMensagem(null);
@@ -138,7 +134,7 @@ export default function Servicos() {
     // Converte a entrada em reais para centavos inteiros de modo controlado;
     // nenhum valor com vírgula trafega para a API.
     const precoCentavos = paraCentavos(formulario.preco);
-    const duracaoMinutos = Number(formulario.duracaoMinutos.replace(/\D/g, ''));
+    const duracaoMinutos = inteiroPositivo(formulario.duracaoMinutos);
 
     const novosErros: Record<string, string> = {};
 
@@ -146,8 +142,8 @@ export default function Servicos() {
       novosErros.precoCentavos = 'Informe um preço válido em reais';
     }
 
-    if (!Number.isInteger(duracaoMinutos) || duracaoMinutos <= 0) {
-      novosErros.duracaoMinutos = 'Informe a duração em minutos';
+    if (duracaoMinutos === null) {
+      novosErros.duracaoMinutos = 'Informe uma duração inteira e positiva dentro do limite permitido';
     }
 
     const validacao = servicoSchema.safeParse({

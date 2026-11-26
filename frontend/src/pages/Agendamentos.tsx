@@ -34,7 +34,7 @@ import {
 import { animalService, type Animal } from '../services/animalService';
 import { servicoService, type Servico } from '../services/servicoService';
 import { errosApi, mensagemErro } from '../utils/apiError';
-import { formatarDataHora, paraIsoDataHora, paraValorDataHora } from '../utils/data';
+import { dataHoraParaSalvar, formatarDataHora, paraValorDataHora } from '../utils/data';
 import AgendamentoModal, {
   type AgendamentoForm,
 } from '../components/AgendamentoModal';
@@ -155,6 +155,7 @@ export default function Agendamentos() {
   // Salva um agendamento novo ou atualizado
   async function salvarAgendamento(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (salvando) return;
 
     setMensagem('');
     setTipoMensagem(null);
@@ -175,19 +176,19 @@ export default function Agendamentos() {
     }
 
     // datetime-local (fuso local) => ISO 8601 com timezone
-    const dataHora = paraIsoDataHora(formulario.dataHora);
+    const dataHora = dataHoraParaSalvar(formulario.dataHora, agendamentoSelecionado?.dataHora);
 
     if (!dataHora) {
-      novosErros.dataHora = 'Informe data e hora';
+      novosErros.dataHora = 'Informe data e hora válidas';
     }
 
-    const status = formulario.status as StatusAgendamento;
+
 
     const validacao = agendamentoSchema.safeParse({
       animalId: animalId || 0,
       servicoId: servicoId || 0,
       dataHora: dataHora ?? '',
-      status,
+      status: formulario.status,
       observacoes: formulario.observacoes.trim() || null,
     });
 
@@ -299,6 +300,7 @@ export default function Agendamentos() {
           color="teal"
           leftSection={<Plus size={18} />}
           onClick={abrirCadastro}
+          disabled={carregando || !!erroCarga || animais.length === 0 || servicos.length === 0}
         >
           Novo agendamento
         </Button>
@@ -306,6 +308,9 @@ export default function Agendamentos() {
 
       {/* Mensagens */}
       {erroCarga && <Alert color="red" role="alert">{erroCarga}</Alert>}
+      {!carregando && !erroCarga && (animais.length === 0 || servicos.length === 0) && (
+        <Alert color="yellow" role="status">Cadastre um animal e um serviço para criar agendamentos.</Alert>
+      )}
       {mensagem && !modalAberto && !modalExcluir && (
         <Alert
           color={tipoMensagem === 'success' ? 'green' : 'red'}

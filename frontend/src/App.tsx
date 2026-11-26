@@ -5,50 +5,56 @@ import {
   Routes,
 } from 'react-router-dom';
 
-import AppLayout from './components/AppLayout';
+import { lazy, Suspense } from 'react';
+import { Center, Loader } from '@mantine/core';
+
+
 import ProtectedRoute from './routes/ProtectedRoute';
 
 import Login from './pages/Login';
-import Cadastro from './pages/Cadastro';
-import Home from './pages/Home';
-import Tutores from './pages/Tutores';
-import Animais from './pages/Animais';
-import Servicos from './pages/Servicos';
-import Agendamentos from './pages/Agendamentos';
+const AppLayout = lazy(() => import('./components/AppLayout'));
+const Cadastro = lazy(() => import('./pages/Cadastro'));
+const Home = lazy(() => import('./pages/Home'));
+const Tutores = lazy(() => import('./pages/Tutores'));
+const Animais = lazy(() => import('./pages/Animais'));
+const Servicos = lazy(() => import('./pages/Servicos'));
+const Agendamentos = lazy(() => import('./pages/Agendamentos'));
 
 export default function App() {
   return (
-    <Routes>
+    <Suspense fallback={<Center p="xl"><Loader aria-label="Carregando página" /></Center>}>
+      <Routes>
 
-      {/* Página pública */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/cadastro" element={<Cadastro />} />
+        {/* Página pública */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/cadastro" element={<Cadastro />} />
 
-      {/* Páginas que exigem autenticação */}
-      <Route element={<ProtectedRoute />}>
+        {/* Páginas que exigem autenticação */}
+        <Route element={<ProtectedRoute />}>
 
-        <Route path="/" element={<AppLayout />}>
+          <Route path="/" element={<AppLayout />}>
 
-          <Route
-            index
-            element={<Navigate to="/home" replace />}
-          />
+            <Route
+              index
+              element={<Navigate to="/home" replace />}
+            />
 
-          <Route path="home" element={<Home />} />
+            <Route path="home" element={<Home />} />
 
-          <Route path="tutores" element={<Tutores />} />
+            <Route path="tutores" element={<Tutores />} />
 
-          <Route path="animais" element={<Animais />} />
+            <Route path="animais" element={<Animais />} />
 
-          <Route path="servicos" element={<Servicos />} />
+            <Route path="servicos" element={<Servicos />} />
 
-          <Route path="agendamentos" element={<Agendamentos />} />
+            <Route path="agendamentos" element={<Agendamentos />} />
 
+          </Route>
         </Route>
-      </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
 
-    </Routes>
+      </Routes>
+    </Suspense>
   );
 }
